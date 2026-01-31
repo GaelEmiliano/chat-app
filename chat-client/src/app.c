@@ -3,6 +3,7 @@
 #include "command_parser.h"
 #include "line_buffer.h"
 #include "net.h"
+#include "protocol.h"
 #include "server_event.h"
 
 #include <errno.h>
@@ -23,7 +24,9 @@ static bool write_stderr_line(const char *message) {
 }
 
 static bool handle_server_input(int server_fd,
-                                chat_line_buffer_t *server_buffer) {
+                                chat_line_buffer_t *server_buffer,
+                                bool *is_identified, char *identified_username,
+                                size_t username_capacity) {
     unsigned char read_buffer[BUFFER_LENGTH];
 
     ssize_t bytes_read = read(server_fd, read_buffer, sizeof(read_buffer));
@@ -62,6 +65,26 @@ static bool handle_server_input(int server_fd,
             continue;
         }
 
+        /* Detect IDENTIFY SUCCESS to unlock client */
+        json_t *type = json_object_get(root, "type");
+        if (json_is_string(type) &&
+            strcmp(json_string_value(type), "RESPONSE") == 0) {
+
+            const char *operation =
+                json_string_value(json_object_get(root, "operation"));
+            const char *result =
+                json_string_value(json_object_get(root, "result"));
+            const char *extra =
+                json_string_value(json_object_get(root, "extra"));
+
+            if (operation && result && strcmp(operation, "IDENTIFY") == 0 &&
+                strcmp(result, "SUCCESS") == 0 && extra) {
+
+                *is_identified = true;
+                snprintf(identified_username, username_capacity, "%s", extra);
+            }
+        }
+
         (void)chat_server_event_print(root, stdout);
 
         json_decref(root);
@@ -72,7 +95,7 @@ static bool handle_server_input(int server_fd,
 }
 
 static bool handle_stdin_input(int server_fd, chat_line_buffer_t *stdin_buffer,
-                               bool *out_should_quit) {
+                               bool *out_should_quit, bool is_identified) {
     unsigned char read_buffer[BUFFER_LENGTH];
 
     ssize_t bytes_read = read(STDIN_FILENO, read_buffer, sizeof(read_buffer));
@@ -101,6 +124,25 @@ static bool handle_stdin_input(int server_fd, chat_line_buffer_t *stdin_buffer,
         }
 
         chat_parse_result_t parse_result = chat_command_parse_line(input_line);
+
+        if (!is_identified) {
+            /* Allow only identify and quit before identification */
+            if (!(parse_result.action == CHAT_PARSE_ACTION_QUIT ||
+                  (parse_result.json_message &&
+                   json_object_get(parse_result.json_message, "type") &&
+                   strcmp(json_string_value(json_object_get(
+                              parse_result.json_message, "type")),
+                          "IDENTIFY") == 0))) {
+
+                fprintf(stderr, "You must identify first using /identify "
+                                "<username>, or type /help for more info.\n");
+                if (parse_result.json_message) {
+                    json_decref(parse_result.json_message);
+                }
+                continue;
+            }
+        }
+
         free(input_line);
 
         if (parse_result.error != CHAT_PARSE_OK) {
@@ -117,6 +159,13 @@ static bool handle_stdin_input(int server_fd, chat_line_buffer_t *stdin_buffer,
 
         if (parse_result.action == CHAT_PARSE_ACTION_QUIT) {
             if (parse_result.json_message) {
+                char *json_compact =
+                    json_dumps(parse_result.json_message, JSON_COMPACT);
+                if (json_compact) {
+                    // Best effort: ignore errors
+                    (void)chat_net_send_json_line(server_fd, json_compact);
+                    free(json_compact);
+                }
                 json_decref(parse_result.json_message);
             }
             *out_should_quit = true;
@@ -125,8 +174,8 @@ static bool handle_stdin_input(int server_fd, chat_line_buffer_t *stdin_buffer,
 
         if (parse_result.action == CHAT_PARSE_ACTION_SEND_JSON &&
             parse_result.json_message) {
-            char *json_compact = json_dumps(parse_result.json_message,
-                                            JSON_COMPACT | JSON_ENSURE_ASCII);
+            char *json_compact =
+                json_dumps(parse_result.json_message, JSON_COMPACT);
             json_decref(parse_result.json_message);
             parse_result.json_message = NULL;
 
@@ -173,7 +222,18 @@ bool chat_app_run(const char *server_host, const char *server_port) {
     bool should_quit = false;
     bool success = true;
 
+    bool is_identified;
+    char identified_username[CHAT_USERNAME_MAX_LEN + 1];
+    identified_username[0] = '\0';
+
     while (!should_quit) {
+        if (is_identified) {
+            printf("@%s: ", identified_username);
+        } else {
+            printf("> ");
+        }
+        fflush(stdout);
+
         struct pollfd poll_fds[2];
         memset(poll_fds, 0, sizeof(poll_fds));
 
@@ -199,7 +259,9 @@ bool chat_app_run(const char *server_host, const char *server_port) {
         }
 
         if (poll_fds[0].revents & POLLIN) {
-            if (!handle_server_input(connection.socket_fd, &server_buffer)) {
+            if (!handle_server_input(connection.socket_fd, &server_buffer,
+                                     &is_identified, identified_username,
+                                     sizeof(identified_username))) {
                 break;
             }
         }
@@ -210,7 +272,7 @@ bool chat_app_run(const char *server_host, const char *server_port) {
 
         if (poll_fds[1].revents & POLLIN) {
             if (!handle_stdin_input(connection.socket_fd, &stdin_buffer,
-                                    &should_quit)) {
+                                    &should_quit, is_identified)) {
                 success = false;
                 break;
             }

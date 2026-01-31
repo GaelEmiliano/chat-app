@@ -153,6 +153,107 @@ static bool chat_consume_escape(const char **cursor, char *out_char) {
     return true;
 }
 
+static bool chat_parse_command_word(const char **cursor, char *out_command,
+                                    size_t out_command_size) {
+    const char *p = chat_skip_spaces(*cursor);
+    if (*p == '\0') {
+        return false;
+    }
+
+    size_t length = 0;
+    while (*p != '\0' && !isspace((unsigned char)*p)) {
+        if (length + 1u >= out_command_size) {
+            return false;
+        }
+        out_command[length++] = *p++;
+    }
+    out_command[length] = '\0';
+
+    *cursor = p;
+    return (length > 0);
+}
+
+static char *chat_parse_one_argument(const char **cursor) {
+    const char *p = chat_skip_spaces(*cursor);
+    if (*p == '\0') {
+        return NULL;
+    }
+
+    bool in_quotes = false;
+    if (*p == '"') {
+        in_quotes = true;
+        p++;
+    }
+
+    char *token_buffer = NULL;
+    size_t token_length = 0;
+    size_t token_capacity = 0;
+
+    while (1) {
+        if (*p == '\0') {
+            if (in_quotes) {
+                free(token_buffer);
+                return NULL;
+            }
+            break;
+        }
+
+        if (!in_quotes && isspace((unsigned char)*p)) {
+            break;
+        }
+
+        if (*p == '\\') {
+            char decoded = '\0';
+            const char *escape_cursor = p;
+            if (!chat_consume_escape(&escape_cursor, &decoded)) {
+                free(token_buffer);
+                return NULL;
+            }
+            p = escape_cursor;
+
+            if (!chat_append_char(&token_buffer, &token_length, &token_capacity,
+                                  decoded)) {
+                free(token_buffer);
+                return NULL;
+            }
+            continue;
+        }
+
+        if (in_quotes && *p == '"') {
+            p++;
+            in_quotes = false;
+            break;
+        }
+
+        if (!chat_append_char(&token_buffer, &token_length, &token_capacity,
+                              *p)) {
+            free(token_buffer);
+            return NULL;
+        }
+        p++;
+    }
+
+    if (in_quotes) {
+        free(token_buffer);
+        return NULL;
+    }
+
+    if (!token_buffer) {
+        token_buffer = strdup("");
+        if (!token_buffer)
+            return NULL;
+    }
+
+    *cursor = p;
+    return token_buffer;
+}
+
+static const char *chat_parse_rest_text(const char **cursor) {
+    const char *p = chat_skip_spaces(*cursor);
+    *cursor = p;
+    return p;
+}
+
 /*
  * Tokenizer:
  *  - Splits by whitespace outside quotes.
@@ -291,25 +392,29 @@ static chat_parse_result_t chat_build_users(void) {
     return chat_parse_result_ok(CHAT_PARSE_ACTION_SEND_JSON, msg);
 }
 
-static chat_parse_result_t chat_build_msg(const chat_token_list_t *tokens) {
-    if (tokens->count < 3) {
+static chat_parse_result_t chat_build_msg_from_cursor(const char **cursor) {
+    char *username_owned = chat_parse_one_argument(cursor);
+    if (!username_owned) {
         return chat_parse_result_error(CHAT_PARSE_ERR_MISSING_ARGUMENT,
                                        "usage: /msg <username> <text>");
     }
 
-    const char *username = tokens->items[1];
-    if (!chat_username_is_valid(username)) {
+    if (!chat_username_is_valid(username_owned)) {
+        free(username_owned);
         return chat_parse_result_error(CHAT_PARSE_ERR_INVALID_ARGUMENT,
                                        "invalid username");
     }
 
-    const char *text = tokens->items[2];
-    if (text[0] == '\0') {
-        return chat_parse_result_error(CHAT_PARSE_ERR_INVALID_ARGUMENT,
-                                       "text must not be empty");
+    const char *text = chat_parse_rest_text(cursor);
+    if (!text || text[0] == '\0') {
+        free(username_owned);
+        return chat_parse_result_error(CHAT_PARSE_ERR_MISSING_ARGUMENT,
+                                       "usage: /msg <username> <text>");
     }
 
-    json_t *msg = chat_json_build_text(username, text);
+    json_t *msg = chat_json_build_text(username_owned, text);
+    free(username_owned);
+
     if (!msg) {
         return chat_parse_result_error(CHAT_PARSE_ERR_NO_MEMORY,
                                        "out of memory");
@@ -317,16 +422,11 @@ static chat_parse_result_t chat_build_msg(const chat_token_list_t *tokens) {
     return chat_parse_result_ok(CHAT_PARSE_ACTION_SEND_JSON, msg);
 }
 
-static chat_parse_result_t chat_build_all(const chat_token_list_t *tokens) {
-    if (tokens->count < 2) {
+static chat_parse_result_t chat_build_all_from_cursor(const char **cursor) {
+    const char *text = chat_parse_rest_text(cursor);
+    if (!text || text[0] == '\0') {
         return chat_parse_result_error(CHAT_PARSE_ERR_MISSING_ARGUMENT,
                                        "usage: /all <text>");
-    }
-
-    const char *text = tokens->items[1];
-    if (text[0] == '\0') {
-        return chat_parse_result_error(CHAT_PARSE_ERR_INVALID_ARGUMENT,
-                                       "text must not be empty");
     }
 
     json_t *msg = chat_json_build_public_text(text);
@@ -398,25 +498,29 @@ chat_build_roomusers(const chat_token_list_t *tokens) {
     return chat_parse_result_ok(CHAT_PARSE_ACTION_SEND_JSON, msg);
 }
 
-static chat_parse_result_t chat_build_roommsg(const chat_token_list_t *tokens) {
-    if (tokens->count < 3) {
+static chat_parse_result_t chat_build_roommsg_from_cursor(const char **cursor) {
+    char *roomname_owned = chat_parse_one_argument(cursor);
+    if (!roomname_owned) {
         return chat_parse_result_error(CHAT_PARSE_ERR_MISSING_ARGUMENT,
                                        "usage: /roommsg <roomname> <text>");
     }
 
-    const char *roomname = tokens->items[1];
-    if (!chat_roomname_is_valid(roomname)) {
+    if (!chat_roomname_is_valid(roomname_owned)) {
+        free(roomname_owned);
         return chat_parse_result_error(CHAT_PARSE_ERR_INVALID_ARGUMENT,
                                        "invalid room name");
     }
 
-    const char *text = tokens->items[2];
-    if (text[0] == '\0') {
-        return chat_parse_result_error(CHAT_PARSE_ERR_INVALID_ARGUMENT,
-                                       "text must not be empty");
+    const char *text = chat_parse_rest_text(cursor);
+    if (!text || text[0] == '\0') {
+        free(roomname_owned);
+        return chat_parse_result_error(CHAT_PARSE_ERR_MISSING_ARGUMENT,
+                                       "usage: /roommsg <roomname> <text>");
     }
 
-    json_t *msg = chat_json_build_room_text(roomname, text);
+    json_t *msg = chat_json_build_room_text(roomname_owned, text);
+    free(roomname_owned);
+
     if (!msg) {
         return chat_parse_result_error(CHAT_PARSE_ERR_NO_MEMORY,
                                        "out of memory");
@@ -506,6 +610,31 @@ chat_parse_result_t chat_command_parse_line(const char *line) {
 
     /* Tokenize after the leading '/' */
     const char *command_line = trimmed + 1;
+
+    /*
+      Fast path for commands that must treat the remainder of the line as free
+      text. This avoids forcing quotes for spaces in message bodies.
+    */
+    const char *cursor = command_line;
+    char command_word[32];
+
+    if (!chat_parse_command_word(&cursor, command_word, sizeof(command_word))) {
+        return chat_parse_result_error(CHAT_PARSE_ERR_EMPTY, "empty command");
+    }
+
+    if (strcmp(command_word, "msg") == 0) {
+        return chat_build_msg_from_cursor(&cursor);
+    }
+
+    if (strcmp(command_word, "all") == 0) {
+        return chat_build_all_from_cursor(&cursor);
+    }
+
+    if (strcmp(command_word, "roommsg") == 0) {
+        return chat_build_roommsg_from_cursor(&cursor);
+    }
+
+    /* Fallback: tokenize for the rest of the commands */
     chat_token_list_t tokens;
     chat_token_list_init(&tokens);
 
@@ -531,17 +660,19 @@ chat_parse_result_t chat_command_parse_line(const char *line) {
     chat_parse_result_t result;
 
     if (strcmp(command, "quit") == 0) {
-        result = chat_parse_result_ok(CHAT_PARSE_ACTION_QUIT, NULL);
+        /*
+          Best effort: request a clean server-side disconnect before exiting.
+          If allocation fails, still quit cleanly without sending.
+         */
+        json_t *disconnect_message = chat_json_build_disconnect();
+        result =
+            chat_parse_result_ok(CHAT_PARSE_ACTION_QUIT, disconnect_message);
     } else if (strcmp(command, "identify") == 0) {
         result = chat_build_and_validate_identify(&tokens);
     } else if (strcmp(command, "status") == 0) {
         result = chat_build_and_validate_status(&tokens);
     } else if (strcmp(command, "users") == 0) {
         result = chat_build_users();
-    } else if (strcmp(command, "msg") == 0) {
-        result = chat_build_msg(&tokens);
-    } else if (strcmp(command, "all") == 0) {
-        result = chat_build_all(&tokens);
     } else if (strcmp(command, "newroom") == 0) {
         result = chat_build_newroom(&tokens);
     } else if (strcmp(command, "invite") == 0) {
@@ -550,8 +681,6 @@ chat_parse_result_t chat_command_parse_line(const char *line) {
         result = chat_build_join(&tokens);
     } else if (strcmp(command, "roomusers") == 0) {
         result = chat_build_roomusers(&tokens);
-    } else if (strcmp(command, "roommsg") == 0) {
-        result = chat_build_roommsg(&tokens);
     } else if (strcmp(command, "leave") == 0) {
         result = chat_build_leave(&tokens);
     } else if (strcmp(command, "disconnect") == 0) {

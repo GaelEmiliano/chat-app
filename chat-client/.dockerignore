@@ -1,0 +1,20 @@
+# Build artifacts
+/build
+*.o
+*.a
+
+# Git
+.git
+.gitignore
+
+# Editor / OS junk
+*.swp
+*.swo
+*.tmp
+*~
+.DS_Store
+
+# Docs not needed for build
+README.md
+AUTHORS
+LICENSE

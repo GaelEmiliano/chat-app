@@ -1,5 +1,6 @@
 /* src/main.c */
 #include "app.h"
+#include "banner.h"
 
 #include <stdio.h>
 
@@ -16,6 +17,8 @@ int main(int argc, char **argv) {
 
     const char *server_host = argv[1];
     const char *server_port = argv[2];
+
+    chat_banner_print(stdout);
 
     if (!chat_app_run(server_host, server_port)) {
         return 1;
