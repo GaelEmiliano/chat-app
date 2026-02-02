@@ -1,6 +1,5 @@
-/* src/command_parser.h */
-#ifndef COMMAND_PARSER_H
-#define COMMAND_PARSER_H
+#ifndef CHAT_COMMAND_PARSER_H
+#define CHAT_COMMAND_PARSER_H
 
 #include <jansson.h>
 #include <stdbool.h>

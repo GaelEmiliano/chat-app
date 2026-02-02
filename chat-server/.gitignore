@@ -1,0 +1,29 @@
+# Go build artifacts
+/bin/
+/*.exe
+/*.exe~
+/*.dll
+/*.so
+/*.dylib
+/*.test
+/*.out
+
+# Coverage / profiling
+*.cover
+*.prof
+
+# Logs
+*.log
+
+# Dependency directories (defensive; Go modules usually do not create these)
+vendor/
+
+# Editor / OS files
+.ideauk
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+*~
+.DS_Store

@@ -23,6 +23,26 @@ static bool write_stderr_line(const char *message) {
     return (fprintf(stderr, "%s\n", message) >= 0);
 }
 
+static void clear_prompt_line(void) {
+    /* Move cursor to start of line and clear it  */
+    fputs("\r\033[k", stdout);
+}
+
+static void print_separator(void) {
+    /* Prints a separator for UX prompt and clarity. */
+    fputs("------\n", stdout);
+}
+
+static void print_prompt(bool is_identified, const char *identified_username) {
+    /* Prints the prompt before identification, and after. */
+    if (is_identified && identified_username[0] != '\0') {
+        printf("@%s: ", identified_username);
+    } else {
+        printf("> ");
+    }
+    fflush(stdout);
+}
+
 static bool handle_server_input(int server_fd,
                                 chat_line_buffer_t *server_buffer,
                                 bool *is_identified, char *identified_username,
@@ -85,7 +105,11 @@ static bool handle_server_input(int server_fd,
             }
         }
 
+        clear_prompt_line();
+
+        print_separator();
         (void)chat_server_event_print(root, stdout);
+        print_separator();
 
         json_decref(root);
         free(json_line);
@@ -227,12 +251,7 @@ bool chat_app_run(const char *server_host, const char *server_port) {
     identified_username[0] = '\0';
 
     while (!should_quit) {
-        if (is_identified) {
-            printf("@%s: ", identified_username);
-        } else {
-            printf("> ");
-        }
-        fflush(stdout);
+        print_prompt(is_identified, identified_username);
 
         struct pollfd poll_fds[2];
         memset(poll_fds, 0, sizeof(poll_fds));

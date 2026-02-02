@@ -1,4 +1,4 @@
-# Build directory
+# C build directory
 /build
 
 # Compiled objects
@@ -6,11 +6,17 @@
 *.a
 *.so
 
-# meson internals
+# Meson internals
 meson-private/
 meson-logs/
 
-# Editor / OS junk
+# Logs
+*.log
+
+# Editor / OS files
+.ideauk
+.idea/
+.vscode/
 *.swp
 *.swo
 *.tmp

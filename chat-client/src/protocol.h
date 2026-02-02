@@ -1,6 +1,5 @@
-/* src/protocol.h */
-#ifndef PROTOCOL_H
-#define PROTOCOL_H
+#ifndef CHAT_PROTOCOL_H
+#define CHAT_PROTOCOL_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,7 +18,7 @@ typedef enum {
 typedef enum {
     CHAT_MSG_INVALID,
 
-    /* Client -> Server */
+    /* Client to Server */
     CHAT_MSG_IDENTIFY,
     CHAT_MSG_STATUS,
     CHAT_MSG_USERS,
@@ -33,7 +32,7 @@ typedef enum {
     CHAT_MSG_LEAVE_ROOM,
     CHAT_MSG_DISCONNECT,
 
-    /* Server -> Client */
+    /* Server to Client */
     CHAT_MSG_RESPONSE,
     CHAT_MSG_NEW_USER,
     CHAT_MSG_NEW_STATUS,

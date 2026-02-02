@@ -1,6 +1,5 @@
-/* src/line_buffer.h */
-#ifndef LINE_BUFFER_H
-#define LINE_BUFFER_H
+#ifndef CHAT_LINE_BUFFER_H
+#define CHAT_LINE_BUFFER_H
 
 #include <stdbool.h>
 #include <stddef.h>

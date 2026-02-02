@@ -1,6 +1,5 @@
-/* src/net.h */
-#ifndef NET_H
-#define NET_H
+#ifndef CHAT_NET_H
+#define CHAT_NET_H
 
 #include <stdbool.h>
 #include <stddef.h>

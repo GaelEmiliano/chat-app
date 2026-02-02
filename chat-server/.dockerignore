@@ -1,7 +1,8 @@
-# C build artifacts
-/build
-*.o
-*.a
+# Go build artifacts
+bin/
+*.exe
+*.out
+*.test
 
 # VCS
 .git
@@ -15,6 +16,10 @@
 .vscode
 *~
 .DS_STORE
+
+# Coverage / profiling
+*.cover
+*.prof
 
 # Logs
 *.log

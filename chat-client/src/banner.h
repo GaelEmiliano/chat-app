@@ -1,5 +1,5 @@
-#ifndef BANNER_H
-#define BANNER_H
+#ifndef CHAT_BANNER_H
+#define CHAT_BANNER_H
 
 #include <stdio.h>
 

@@ -1,15 +1,16 @@
 # Chat Client
 
-Minimal terminal TCP chat client written in C.  
+Minimal terminal TCP chat client written in C.
 Implements the full JSON-based protocol specified by the project, using newline (`\n`) framing, low-level sockets, and a real JSON library.
 
-This is a **client only**. All protocol authority (users, rooms, permissions) is handled by the server.
+This is a **client only** implementation. 
+All protocol authority (users, rooms, permissions) is handled by the server.
 
 ---
 
 ## Protocol Scope
 
-**This client implements the protocol exactly as specified; no extensions are assumed.**
+**This client implements the protocol exactly as specified; no extensions, shortcuts, or assumptions are made.**
 
 ---
 
@@ -17,12 +18,12 @@ This is a **client only**. All protocol authority (users, rooms, permissions) is
 
 - TCP client using POSIX sockets
 - JSON parsing and generation via **jansson**
-- Newline framing (`\n`)
+- Newline (`\n`) message framing
 - Interactive CLI
 - Clean command parser (no JSON typing by the user)
 - Prompt with username after identification
 - Dockerized build and runtime
-- No protocol shortcuts or hacks
+- No protocol deviations or undocumented behavior
 
 ---
 
@@ -31,7 +32,8 @@ This is a **client only**. All protocol authority (users, rooms, permissions) is
 ### Recommended (Docker)
 - Docker ≥ 20.x
 
-See [docker installation](https://docs.docker.com/engine/install/).
+See:
+- [Docker](https://www.docker.com/get-started/).
 
 ### Manual build (not recommended)
 - GNU/Linux (or compatible POSIX system)
@@ -51,10 +53,10 @@ To manual installation go to [Manual Installation](#manual-build)
 
 ## Build and Run
 
-### GNU/Linux (Docker – Recommended)
+### Docker – Recommended
 
 #### Build image
-From the project root:
+From the`chat-client` directory:
 
 ```sh
 $ docker build -t chat-client:0.1.0 .
@@ -71,7 +73,7 @@ $ docker run --rm -it chat-client:0.1.0 <server-ip> <port>
 Example:
 
 ```sh
-$ docker run --rm -it chat-client:0.1.0 203.0.113.10 5555
+$ docker run --rm -it chat-client:0.1.0 203.0.113.10 8080
 ```
 
 Connect to a server running on the host (GNU/Linux):
@@ -83,7 +85,7 @@ $ docker run --rm -it --network host chat-client:0.1.0 <localhost> <port>
 Example:
 
 ```sh
-$ docker run --rm -it --network host chat-client:0.1.0 127.0.0.1 5555
+$ docker run --rm -it --network host chat-client:0.1.0 127.0.0.1 8080
 ```
 
 Or (portable alternative):
@@ -94,7 +96,7 @@ $ docker run --rm -it \
 chat-client:0.1.0 host.docker.internal <port>
 ```
 
-### GNU/Linux manual build
+### Manual build
 
 Only use this if Docker is not available 
 (I don't think that happen if it's a proper Docker installation).
@@ -170,89 +172,6 @@ $ meson compile -C build
 $ ./build/chat-client <server-ip> <port>
 ```
 
-### macOS (Docker Desktop - Recommended)
-
-[macOS Docker Desktop](https://docs.docker.com/desktop/setup/install/mac-install/) for macOS installed and running.
-
-#### Build image
-From the project root:
-
-```sh
-$ docker build -t chat-client:0.1.0 .
-```
-
-#### Run client
-
-Connect to a remote server:
-
-```sh
-$ docker run --rm -it chat-client:0.1.0 <server-ip> <port>
-```
-
-Connect to a server running on the host machine:
-
-```sh
-$ docker run --rm -it chat-client:0.1.0 host.docker.internal <port>
-```
-
-If host resolution fail:
-
-```sh
-$ docker run --rm -it --add-host=host.docker.internal:host-gateway \
-chat-client:0.1.0 host.docker.internal <port>
-```
-
-### macOS manual
-
-#### Install dependencies (Homebrew):
-
-```sh
-$ brew install meson ninja jansson
-```
-
-#### Build
-
-```sh
-$ meson setup build
-$ meson compile -C build
-```
-
-#### Run
-
-```sh
-./build/chat-client <server-ip> <port>
-```
-
-### Windows (Docker Desktop and WSL2/Hyper-V - Recommended)
-
-[Windows Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/) installed, and WSL2 or Hyper-V enabled (Docker Desktop will prompt for this).
-
-#### Build (PowerShell or Windows Terminal)
-
-```powershell
-docker build -t chat-client:0.1.0 .
-```
-
-#### Run 
-
-Remote server:
-
-```powershell
-docker run --rm -it chat-client:0.1.0 <server_ip> <port>
-```
-
-Server running on the host machine:
-
-```powershell
-docker run --rm -it chat-client:0.1.0 host.docker.internal <port> 
-```
-
-If host resolution fails, use the explicit mapping:
-
-```powershell
-docker run --rm -it --add-host=host.docker.internal:host-gateway `
-chat-client:0.1.0 host.docker.internal <port>
-```
 ---
 
 ## Usage
@@ -458,17 +377,15 @@ This command is **client-side** only and does not contact the server.
 
 ## Notes
 
-- All protocol validation and authorization is handled by the server.
-- The client intentionally does not duplicate server-side rules.
-- JSON messages are never typed manually by the user.
-- If the server disconnects or sends invalid data, the client exits cleanly.
+All protocol validation and authorization is handled by the server. The client intentionally does not duplicate server-side rules. JSON messages are never typed manually by the user. If the server disconnects or sends invalid data, the client exits cleanly.
 
 ---
 
 ## License
 
-MIT License.
-[See the license](LICENSE).
+[The MIT license](../../LICENSE).
+
+Academic project.
 
 ---
 

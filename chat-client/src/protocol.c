@@ -1,4 +1,3 @@
-/* src/protocol.c */
 #include "protocol.h"
 
 #include <ctype.h>

@@ -1,6 +1,5 @@
-/* src/server_event.h */
-#ifndef SERVER_EVENT_H
-#define SERVER_EVENT_H
+#ifndef CHAT_SERVER_EVENT_H
+#define CHAT_SERVER_EVENT_H
 
 #include "protocol.h"
 

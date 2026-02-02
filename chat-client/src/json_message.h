@@ -1,6 +1,5 @@
-/* src/json_message.h */
-#ifndef JSON_MESSAGE_H
-#define JSON_MESSAGE_H
+#ifndef CHAT_JSON_MESSAGE_H
+#define CHAT_JSON_MESSAGE_H
 
 #include "protocol.h"
 

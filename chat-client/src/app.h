@@ -1,6 +1,5 @@
-/* src/app.h */
-#ifndef APP_H
-#define APP_H
+#ifndef CHAT_APP_H
+#define CHAT_APP_H
 
 #include <stdbool.h>
 
