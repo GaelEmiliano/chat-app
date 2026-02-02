@@ -1,7 +1,5 @@
 # Chat App
 
-# Chat App
-
 ⚠ This project implements a strict academic protocol. Any protocol violation results in immediate client disconnection.
 
 **Chat App** is a simple, robust TCP chat application built as a small client/server system. The server is written in Go (Go 1.23.0) and enforces a strict JSON protocol over newline (`\n`) framing. The client is written in C and is designed for interactive terminal use. The system supports multiple concurrent clients, user identification, status updates, private messaging, public broadcast messaging, and room-based messaging with invitations and membership rules.
@@ -17,13 +15,11 @@ The easiest way to run everything is with Docker and docker compose. Manual buil
 Git is the normal way to work with this project.
 
 ```sh
-$ git clone <YOUR_GITHUB_REPO_URL> chat-app
+$ git clone https://github.com/GaelEmiliano/chat-app
 $ cd chat-app
 ```
 
 If you prefer to download a ZIP archive from GitHub, you can, but you lose history and it is harder to update cleanly. Use git unless you have a reason not to.
-
----
 
 ## Run with Docker (recommended)
 
@@ -71,8 +67,6 @@ Notes:
 - The server listens on port 8080 by default and is published to the host via compose. If you want a different port, change the mapping and `CHAT_SERVER_ADDR` in `docker-compose.yml` consistently.
 - The client connects to `server:8080` when started via compose because `server` is the compose service name.
 
----
-
 ## Client commands (interactive usage)
 
 The client expects the server host and port on startup, then you interact with it via commands. The exact user experience is intentionally minimal and terminal-friendly.
@@ -96,8 +90,6 @@ For the full list of supported client commands and their exact syntax, see:
 
 - [Client Guide](chat-client/docs/README.md).
 
----
-
 ## Server behavior and protocol correctness
 
 The server is strict by design. If a message is incomplete (missing required fields), has invalid values (for example invalid status), or cannot be recognized (not a JSON object with a string `type` field), the server replies with:
@@ -112,8 +104,6 @@ For server-specific configuration, build/run details, and implementation notes, 
 
 - [Server Guide](chat-server/docs/README.md).
 
----
-
 ## Project layout
 
 - chat-server/
@@ -125,11 +115,8 @@ For server-specific configuration, build/run details, and implementation notes, 
 - docker-compose.yml
   Orchestrates server and client containers for local testing and reproducible runs.
 
----
 
 If you want details, read the subproject documentation. If you want to run it, use docker compose. That’s it.
-
----
 
 ## Version
 
@@ -137,8 +124,6 @@ If you want details, read the subproject documentation. If you want to run it, u
 
 This version implements the complete project protocol as specified, with no extensions and strict validation.
 Future changes, if any, will focus on hardening, testing, and documentation—not protocol changes.
-
----
 
 ## License
 
@@ -150,8 +135,6 @@ You are free to use, modify, and redistribute it for academic or personal purpos
 See the `LICENSE` file for full details.
 
 - [LICENSE](LICENSE)
-
----
 
 ## Issues and Contact
 
@@ -165,4 +148,4 @@ When reporting issues, include:
 - server and client logs if possible
 - a short description of what you expected vs what happened
 
-Clear reports help improve the project for everyone 🙂
+Clear reports help improve the project 🙂

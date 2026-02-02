@@ -8,15 +8,13 @@ All protocol authority (users, statuses, private messaging, rooms, invitations, 
 
 The implementation follows a clean, single-owner concurrency model and fails closed on all protocol violations, exactly as required by the specification.
 
----
+___
 
 ## Protocol Scope
 
 **This server implements the protocol exactly as specified; no extensions, shortcuts, or assumptions are made.**
 
 Invalid JSON, malformed messages, unexpected fields, invalid state transitions, or protocol misuse result in the required `INVALID` response followed by client disconnection.
-
----
 
 ## Features
 
@@ -35,8 +33,6 @@ Invalid JSON, malformed messages, unexpected fields, invalid state transitions, 
 - Dockerized build and runtime
 - No protocol deviations or undocumented behavior
 
----
-
 ## Requirements
 
 ### Recommended (Docker)
@@ -53,8 +49,6 @@ See:
 - [Go](https://go.dev/doc/go1.23)
 
 No external Go dependencies are used.
-
----
 
 ## Build and Run
 
@@ -136,18 +130,29 @@ This design guarantees correctness under concurrency and simplifies protocol rea
 
 The server does not echo events back to the sender unless explicitly required by the protocol. All disconnections (explicit or abrupt) trigger the correct protocol notifications. The server is suitable for local testing, Docker-based deployments, and academic evaluation.
 
----
+📝 **MIT License**
 
-## License
+This project is released under the MIT License.
+You are free to use, modify, and redistribute it for academic or personal purposes.
 
-[The MIT license](../../LICENSE).
+See the `LICENSE` file for full details.
 
-Academic project.
-
----
+[LICENSE](../../LICENSE).
 
 ## Status
 
-**Stable - v0.1.0**
+📦 ***Stable - v0.1.0**
 
-Any issue please contact: *emiliano.arreguin@ciencias.unam.mx*
+## Issues and Contact
+
+🐛 Found a bug, unexpected behavior, or protocol issue?
+📬 Please report it by opening an issue in the repository or by contacting:
+
+**Email:** emiliano.arreguin@ciencias.unam.mx
+
+When reporting issues, include:
+- whether you are running via Docker or manually
+- server and client logs if possible
+- a short description of what you expected vs what happened
+
+Clear reports help improve the project 🙂

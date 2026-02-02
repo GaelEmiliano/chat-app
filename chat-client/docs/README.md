@@ -12,8 +12,6 @@ All protocol authority (users, rooms, permissions) is handled by the server.
 
 **This client implements the protocol exactly as specified; no extensions, shortcuts, or assumptions are made.**
 
----
-
 ## Features
 
 - TCP client using POSIX sockets
@@ -24,8 +22,6 @@ All protocol authority (users, rooms, permissions) is handled by the server.
 - Prompt with username after identification
 - Dockerized build and runtime
 - No protocol deviations or undocumented behavior
-
----
 
 ## Requirements
 
@@ -48,8 +44,6 @@ See:
 - [Jansson](https://jansson.readthedocs.io/en/latest/)
 
 To manual installation go to [Manual Installation](#manual-build)
-
----
 
 ## Build and Run
 
@@ -171,8 +165,6 @@ $ meson compile -C build
 ```sh
 $ ./build/chat-client <server-ip> <port>
 ```
-
----
 
 ## Usage
 
@@ -379,18 +371,29 @@ This command is **client-side** only and does not contact the server.
 
 All protocol validation and authorization is handled by the server. The client intentionally does not duplicate server-side rules. JSON messages are never typed manually by the user. If the server disconnects or sends invalid data, the client exits cleanly.
 
----
+📝 **MIT License**
 
-## License
+This project is released under the MIT License.
+You are free to use, modify, and redistribute it for academic or personal purposes.
 
-[The MIT license](../../LICENSE).
+See the `LICENSE` file for full details.
 
-Academic project.
-
----
+[LICENSE](../../LICENSE).
 
 ## Status
 
-**Stable - v0.1.0**
+📦 ***Stable - v0.1.0**
 
-Any issue please contact: *emiliano.arreguin@ciencias.unam.mx*
+## Issues and Contact
+
+🐛 Found a bug, unexpected behavior, or protocol issue?
+📬 Please report it by opening an issue in the repository or by contacting:
+
+**Email:** emiliano.arreguin@ciencias.unam.mx
+
+When reporting issues, include:
+- whether you are running via Docker or manually
+- server and client logs if possible
+- a short description of what you expected vs what happened
+
+Clear reports help improve the project 🙂
